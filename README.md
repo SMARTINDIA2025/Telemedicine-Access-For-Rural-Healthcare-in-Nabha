@@ -1,5 +1,4 @@
-# FRA-Atlas-DSS
-AI-powered FRA Atlas &amp; WebGIS-based Decision Support System for monitoring Forest Rights Act (FRA) implementation in India.
+
 # FRA Atlas & Decision Support System (DSS)
 
 An AI-powered Forest Rights Act (FRA) Atlas and WebGIS-based Decision Support System to monitor and enhance the implementation of the Forest Rights Act, 2006 in the Indian states of Madhya Pradesh, Tripura, Odisha, and Telangana.
