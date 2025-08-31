@@ -48,6 +48,11 @@ A platform that digitizes end‑to‑end Panchakarma operations for clinics/spas
 
    * After each session: patient‑reported outcomes (symptom relief, side‑effects).
    * Rule/ML layer updates: adjust frequency/sequence, modify precautions, flag supervision needs.
+    
+6. **Clinic Discovery & Matching**
+
+   * Cost-friendly clinic choices: Patients can compare clinics/packages and sort/filter options based on affordability and available offers.
+   * Location-based matching: Patients are auto-suggested the nearest clinics that meet therapy requirements, patient preferences (e.g., gender/privacy), and availability.
 
 ---
 
@@ -55,7 +60,7 @@ A platform that digitizes end‑to‑end Panchakarma operations for clinics/spas
 
 **Patient**
 
-1. Books Panchakarma package → completes intake (dosha questionnaire, comorbidities, preferences).
+1. Searches for Panchakarma package → system suggests nearest and cost-friendly clinics → selects clinic/package based on affordability & convenience → completes intake (dosha questionnaire, comorbidities, preferences).
 2. Receives pre‑procedure guidance → attends sessions → logs feedback → sees progress charts.
 
 **Practitioner**
@@ -82,6 +87,7 @@ A platform that digitizes end‑to‑end Panchakarma operations for clinics/spas
 * Start with a **constraint‑based greedy + backtracking** scheduler (deterministic, explainable), evolving to MILP if needed.
 * Priority queue by: medical urgency > plan deadline adherence > patient preference score > resource utilization.
 * Conflict resolver explains: “Room R2 unavailable 10:00–11:00; moved to 11:30 with Therapist T3.”
+* Discovery layer integration: Before scheduling, the system generates a ranked list of candidate centers based on location proximity and cost preferences.
 
 **Pseudocode (high‑level)**
 
