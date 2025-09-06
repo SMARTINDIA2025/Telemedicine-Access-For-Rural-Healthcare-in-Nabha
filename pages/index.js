@@ -2,6 +2,7 @@ import Head from "next/head";
 import Link from "next/link";
 import Image from "next/image";
 import { useTranslation } from "next-i18next";
+import { serverSideTranslations } from "next-i18next/serverSideTranslations";
 import { useRouter } from "next/router";
 import {
   HiOutlineChatAlt2,
@@ -19,29 +20,51 @@ import {
 // ---------------- LANGUAGE SWITCHER ----------------
 function LanguageSwitcher() {
   const router = useRouter();
-  const { locale, pathname, query, asPath } = router;
+  const { locale } = router;
+
+  const languages = {
+    en: { name: 'English' },
+    hi: { name: 'हिन्दी' },
+    pa: { name: 'ਪੰਜਾਬੀ' }
+  };
 
   function changeLanguage(e) {
     const newLocale = e.target.value;
-    router.push({ pathname, query }, asPath, { locale: newLocale });
+    document.cookie = `NEXT_LOCALE=${newLocale}; path=/; max-age=31536000`;
+    router.push(router.pathname, router.pathname, { locale: newLocale });
   }
 
   return (
-    <div className="mb-6 text-center">
+        <div className="relative inline-block">
       <select
         value={locale}
         onChange={changeLanguage}
-        className="px-4 py-2 rounded-lg border border-blue-600 bg-blue-50 text-blue-800 font-semibold cursor-pointer shadow-md"
+        className="appearance-none px-6 py-2 pr-10 rounded-lg border-2 border-green-600 bg-white hover:bg-green-50 
+                 text-green-800 text-lg font-medium cursor-pointer shadow-md transition-all duration-200 
+                 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
       >
+        <option value="hi" className="font-hindi">हिन्दी</option>
+        <option value="pa" className="font-punjabi">ਪੰਜਾਬੀ</option>
         <option value="en">English</option>
-        <option value="hi">हिन्दी</option>
-        <option value="pa">ਪੰਜਾਬੀ</option>
       </select>
+      <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none text-green-600">
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </div>
     </div>
   );
 }
 
 // ---------------- MAIN PAGE ----------------
+export async function getStaticProps({ locale }) {
+  return {
+    props: {
+      ...(await serverSideTranslations(locale, ['common'])),
+    },
+  };
+}
+
 export default function Home() {
   const { t } = useTranslation("common");
 
@@ -175,14 +198,23 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Title */}
-        <h1 className="text-4xl md:text-5xl font-extrabold text-blue-900 text-center mb-4 drop-shadow-lg">
-          Welcome To Nabha Care!
+        {/* Multilingual Title */}
+        <h1 className="mb-2">
+          <div className="text-4xl md:text-3xl font-extrabold text-blue-900 drop-shadow-lg text-center">
+            Welcome to Nabha Care
+            <span className="mx-3 text-green-700">•</span>
+            <span className="font-hindi">नभा केयर में आपका स्वागत है</span>
+          </div>
         </h1>
-        <p className="text-lg text-gray-700 text-center max-w-2xl mb-10">
-          Bridging healthcare gaps for 173 villages through telemedicine,
-          multilingual consultations, and real-time access to medical support.
-        </p>
+        
+        {/* Subtitle */}
+        <div className="text-center mb-10 max-w-3xl mx-auto">
+          <p className="text-lg text-gray-700">
+            Bridging healthcare gaps for 173 villages 
+            <span className="mx-3 text-green-700">|</span>
+            <span className="font-hindi">173 गांवों में स्वास्थ्य सेवा का विस्तार</span>
+          </p>
+        </div>
 
         {/* Feature Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-6xl">
