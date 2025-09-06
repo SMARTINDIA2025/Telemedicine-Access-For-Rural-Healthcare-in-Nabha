@@ -5,16 +5,15 @@ import { useTranslation } from "next-i18next";
 import { serverSideTranslations } from "next-i18next/serverSideTranslations";
 import { useRouter } from "next/router";
 import {
-  HiOutlineChatAlt2,
-  HiOutlineClipboardCheck,
-  HiOutlineCalendar,
-  HiOutlineVideoCamera,
-  HiOutlineDocumentText,
-  HiOutlineUserGroup,
-  HiOutlineUser,
-  HiOutlineShoppingCart,
-  HiOutlineCog,
-  HiOutlineShieldCheck,
+  HiUserCircle as HiOutlineUserMd,
+  HiShieldCheck as HiOutlineShieldCheck,
+  HiChatAlt2 as HiOutlineChatAlt2,
+  HiClipboardCheck as HiOutlineClipboardCheck,
+  HiCalendar as HiOutlineCalendar,
+  HiVideoCamera as HiOutlineVideoCamera,
+  HiDocumentText as HiOutlineDocumentText,
+  HiUser as HiOutlineUser,
+  HiBeaker as HiOutlineBeaker,
 } from "react-icons/hi"; // Heroicons
 
 // ---------------- LANGUAGE SWITCHER ----------------
@@ -100,12 +99,6 @@ export default function Home() {
       icon: <HiOutlineDocumentText className="w-8 h-8 text-indigo-600" />,
     },
     {
-      href: "/doctor-view",
-      title: t("doctorView"),
-      desc: t("doctorViewDesc"),
-      icon: <HiOutlineUserGroup className="w-8 h-8 text-teal-600" />,
-    },
-    {
       href: "/patient-view",
       title: t("patientView"),
       desc: t("patientViewDesc"),
@@ -115,13 +108,7 @@ export default function Home() {
       href: "/pharmacy",
       title: t("pharmacy"),
       desc: t("pharmacyDesc"),
-      icon: <HiOutlineShoppingCart className="w-8 h-8 text-pink-500" />,
-    },
-    {
-      href: "/pharmacy-admin",
-      title: t("pharmacyAdmin"),
-      desc: t("pharmacyAdminDesc"),
-      icon: <HiOutlineCog className="w-8 h-8 text-gray-700" />,
+      icon: <HiOutlineBeaker className="w-8 h-8 text-pink-500" />,
     },
   ];
 
@@ -132,6 +119,24 @@ export default function Home() {
         <meta name="description" content="NabhaCare Integrated Health Platform" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
+
+      {/* Top Navigation Bar */}
+      <div className="bg-white shadow-sm">
+        <div className="max-w-6xl mx-auto px-6 py-2 flex justify-end gap-4">
+          <Link href="/doctor-view" legacyBehavior>
+            <a className="inline-flex items-center px-4 py-2 rounded-lg text-blue-700 hover:bg-blue-50 transition-colors">
+              <HiOutlineUserMd className="w-5 h-5 mr-2" />
+              {t("doctorLogin")}
+            </a>
+          </Link>
+          <Link href="/super-admin" legacyBehavior>
+            <a className="inline-flex items-center px-4 py-2 rounded-lg text-green-700 hover:bg-green-50 transition-colors">
+              <HiOutlineShieldCheck className="w-5 h-5 mr-2" />
+              {t("adminLogin")}
+            </a>
+          </Link>
+        </div>
+      </div>
 
       {/* Background Pattern */}
       <div className="absolute inset-0 -z-10 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px] opacity-40"></div>
@@ -227,15 +232,6 @@ export default function Home() {
               </a>
             </Link>
           ))}
-
-          {/* Super Admin Card */}
-          <Link href="/super-admin" legacyBehavior>
-            <a className="bg-gradient-to-r from-green-600 to-blue-600 text-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition flex flex-col gap-3">
-              <HiOutlineShieldCheck className="w-8 h-8" />
-              <h2 className="text-xl font-semibold">{t("superAdmin")}</h2>
-              <p className="text-sm">{t("superAdminDesc")}</p>
-            </a>
-          </Link>
         </div>
 
         {/* Footer */}

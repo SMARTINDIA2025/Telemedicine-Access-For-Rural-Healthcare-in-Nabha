@@ -1,4 +1,6 @@
 {
+  "doctorLogin": "Doctor Login",
+  "adminLogin": "Admin Login",
   "welcome": "Welcome To Nabha Care!",
   "hospitalSupport": "Hospital Support",
   "hospitalSupportDesc": "Chat with our AI for hospital information.",

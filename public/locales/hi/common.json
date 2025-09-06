@@ -1,4 +1,6 @@
 {
+  "doctorLogin": "डॉक्टर लॉगिन",
+  "adminLogin": "एडमिन लॉगिन",
   "welcome": "नभा केयर में आपका स्वागत है!",
   "hospitalSupport": "अस्पताल सहायता",
   "hospitalSupportDesc": "अस्पताल जानकारी के लिए हमारे एआई से चैट करें।",
