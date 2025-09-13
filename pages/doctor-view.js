@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
+import DoctorLogin from '../components/DoctorLogin';
 
 const commonMeds = [
   { name: 'Paracetamol 500mg', dosage: '1 tablet SOS for fever/pain' },
@@ -17,6 +18,11 @@ export default function DoctorView() {
   const [selectedDoctor, setSelectedDoctor] = useState('');
   const [doctors, setDoctors] = useState([]);
   const [doctorSignature, setDoctorSignature] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   
   const [isPrescriptionModalOpen, setPrescriptionModalOpen] = useState(false);
   const [isPatientFileOpen, setPatientFileOpen] = useState(false);
@@ -44,31 +50,69 @@ export default function DoctorView() {
   const [templates, setTemplates] = useState([]);
 
   useEffect(() => {
-    const fetchDoctors = async () => {
-      const res = await fetch('/api/doctors');
-      const data = await res.json();
-      setDoctors(data);
-      if (data.length > 0) setSelectedDoctor(data[0].name);
-    };
-    fetchDoctors();
-    const savedTemplates = JSON.parse(localStorage.getItem('prescriptionTemplates') || '[]');
-    setTemplates(savedTemplates);
-    const savedCompleted = JSON.parse(localStorage.getItem('completedAppointments') || '[]');
-    setCompletedAppointments(new Set(savedCompleted));
-  }, []);
+    // Load initial data only if authenticated
+    if (isAuthenticated) {
+      try {
+        // Load templates and completed appointments
+        const savedTemplates = JSON.parse(localStorage.getItem('prescriptionTemplates') || '[]');
+        setTemplates(savedTemplates);
+        const savedCompleted = JSON.parse(localStorage.getItem('completedAppointments') || '[]');
+        setCompletedAppointments(new Set(savedCompleted));
+        
+        // Get logged-in doctor data from localStorage with detailed error checking
+        const rawDoctorData = localStorage.getItem('doctorData');
+        console.log('Raw doctor data:', rawDoctorData); // Debug log
+
+        if (!rawDoctorData) {
+          console.log('No doctor data found in localStorage');
+          setIsAuthenticated(false);
+          return;
+        }
+
+        const doctorData = JSON.parse(rawDoctorData);
+        console.log('Parsed doctor data:', doctorData); // Debug log
+
+        if (doctorData && doctorData.name) {
+          setSelectedDoctor(doctorData.name);
+          setDoctors([doctorData]); // Set doctors array to only contain the logged-in doctor
+        } else {
+          console.log('Invalid doctor data format:', doctorData);
+          setIsAuthenticated(false);
+        }
+      } catch (error) {
+        console.error('Error processing doctor data:', error);
+        setIsAuthenticated(false);
+      }
+    }
+  }, [isAuthenticated]);
 
   const fetchAppointments = async () => {
-    if (!selectedDoctor) return;
-    const res = await fetch('/api/appointments');
-    const data = await res.json();
-    setAppointments(data.filter(apt => apt.doctor === selectedDoctor));
-    const savedSignature = localStorage.getItem(`signature_${selectedDoctor}`);
-    setDoctorSignature(savedSignature || null);
+    if (!selectedDoctor || !isAuthenticated) return;
+    
+    try {
+      const res = await fetch('/api/appointments');
+      
+      if (!res.ok) {
+        throw new Error('Failed to fetch appointments');
+      }
+      
+      const data = await res.json();
+      // Filter appointments for the logged-in doctor
+      const doctorAppointments = (data.appointments || []).filter(apt => apt.doctor === selectedDoctor);
+      setAppointments(doctorAppointments);
+      
+      // Load doctor's signature
+      const savedSignature = localStorage.getItem(`signature_${selectedDoctor}`);
+      setDoctorSignature(savedSignature || null);
+    } catch (error) {
+      console.error('Error fetching appointments:', error);
+      setAppointments([]);
+    }
   };
 
   useEffect(() => {
     fetchAppointments();
-  }, [selectedDoctor]);
+  }, [selectedDoctor, isAuthenticated]);
 
   const handleSignatureUpload = (e) => {
     const file = e.target.files[0];
@@ -270,46 +314,83 @@ export default function DoctorView() {
   const today = new Date().toISOString().split('T')[0];
   const todaysAppointments = appointments.filter(apt => apt.date === today).length;
 
+  // Login handling is now moved to DoctorLogin component
+
+  // Check for authentication status on component mount
+  useEffect(() => {
+    try {
+      const doctorData = localStorage.getItem('doctorData');
+      if (doctorData) {
+        const doctor = JSON.parse(doctorData);
+        if (doctor && doctor.name) {
+          setIsAuthenticated(true);
+          setSelectedDoctor(doctor.name);
+        } else {
+          localStorage.removeItem('doctorData');
+          setIsAuthenticated(false);
+        }
+      }
+    } catch (error) {
+      console.error('Error checking authentication:', error);
+      localStorage.removeItem('doctorData');
+      setIsAuthenticated(false);
+    }
+  }, []);
+
   return (
     <div style={{ fontFamily: 'sans-serif', padding: '30px', background: '#f9fafb', minHeight: '100vh' }}>
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
         <h1 style={{ color: '#111827', fontSize: '32px' }}>Doctor's Dashboard</h1>
-        <button onClick={() => router.push('/')} style={{ padding: '10px 20px', background: '#e5e7eb', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '500' }}>Home</button>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          {isAuthenticated && (
+            <button 
+              onClick={() => {
+                localStorage.removeItem('doctorToken');
+                localStorage.removeItem('doctorData');
+                setIsAuthenticated(false);
+              }} 
+              style={{ padding: '10px 20px', background: '#dc2626', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '500' }}
+            >
+              Logout
+            </button>
+          )}
+          <button onClick={() => router.push('/')} style={{ padding: '10px 20px', background: '#e5e7eb', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '500' }}>Home</button>
+        </div>
       </header>
-
-      <div style={{ marginBottom: '30px', display: 'flex', alignItems: 'center', gap: '20px' }}>
-        <div>
-          <label htmlFor="doctor-select" style={{ marginRight: '10px', fontWeight: 'bold' }}>Select Doctor:</label>
-          <select id="doctor-select" value={selectedDoctor} onChange={(e) => setSelectedDoctor(e.target.value)} style={{ padding: '8px', borderRadius: '6px' }}>
-            {doctors.map(doc => <option key={doc.id} value={doc.name}>{doc.name}</option>)}
-          </select>
+      
+      {isAuthenticated ? (
+        <main>
+          <div>
+        <div style={{ marginBottom: '30px', display: 'flex', alignItems: 'center', gap: '20px' }}>
+          <div>
+            <h3 style={{ fontWeight: 'bold' }}>Dr. {selectedDoctor}</h3>
+          </div>
+          <div>
+            <input type="file" accept="image/*" ref={signatureUploadRef} onChange={handleSignatureUpload} style={{ display: 'none' }} />
+            <button onClick={() => signatureUploadRef.current.click()} style={{ padding: '8px 12px', background: '#6b7280', color: 'white', border: 'none', borderRadius: '6px' }}>Manage Signature</button>
+            {doctorSignature && <img src={doctorSignature} alt="Signature Preview" style={{ height: '30px', marginLeft: '10px', border: '1px solid #ccc' }} />}
+          </div>
         </div>
-        <div>
-          <input type="file" accept="image/*" ref={signatureUploadRef} onChange={handleSignatureUpload} style={{ display: 'none' }} />
-          <button onClick={() => signatureUploadRef.current.click()} style={{ padding: '8px 12px', background: '#6b7280', color: 'white', border: 'none', borderRadius: '6px' }}>Manage Signature</button>
-          {doctorSignature && <img src={doctorSignature} alt="Signature Preview" style={{ height: '30px', marginLeft: '10px', border: '1px solid #ccc' }} />}
-        </div>
-      </div>
 
-      <div style={{ display: 'flex', gap: '20px', marginBottom: '30px', flexWrap: 'wrap' }}>
-        <div style={{ flex: 1, background: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', textAlign: 'center', minWidth: '200px' }}>
-          <h3 style={{ margin: 0, color: '#4b5563' }}>Total Appointments</h3>
-          <p style={{ fontSize: '36px', fontWeight: 'bold', color: '#1f2937', margin: '10px 0 0 0' }}>{appointments.length}</p>
+        <div style={{ display: 'flex', gap: '20px', marginBottom: '30px', flexWrap: 'wrap' }}>
+          <div style={{ flex: 1, background: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', textAlign: 'center', minWidth: '200px' }}>
+            <h3 style={{ margin: 0, color: '#4b5563' }}>Total Appointments</h3>
+            <p style={{ fontSize: '36px', fontWeight: 'bold', color: '#1f2937', margin: '10px 0 0 0' }}>{appointments.length}</p>
+          </div>
+          <div style={{ flex: 1, background: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', textAlign: 'center', minWidth: '200px' }}>
+            <h3 style={{ margin: 0, color: '#4b5563' }}>Appointments Today</h3>
+            <p style={{ fontSize: '36px', fontWeight: 'bold', color: '#1f2937', margin: '10px 0 0 0' }}>{todaysAppointments}</p>
+          </div>
         </div>
-        <div style={{ flex: 1, background: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', textAlign: 'center', minWidth: '200px' }}>
-          <h3 style={{ margin: 0, color: '#4b5563' }}>Appointments Today</h3>
-          <p style={{ fontSize: '36px', fontWeight: 'bold', color: '#1f2937', margin: '10px 0 0 0' }}>{todaysAppointments}</p>
+
+        <div style={{ background: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', marginBottom: '30px', display: 'flex', gap: '20px', alignItems: 'center' }}>
+          <h3 style={{ margin: 0, color: '#1f2937' }}>Find Appointments</h3>
+          <input type="text" placeholder="Search by patient name..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} style={{ padding: '10px', flex: 1 }} />
+          <input type="date" value={dateFilter} onChange={e => setDateFilter(e.target.value)} style={{ padding: '10px' }} />
+          <button onClick={() => { setSearchTerm(''); setDateFilter(''); }} style={{ padding: '10px', background: '#d1d5db', border: 'none', borderRadius: '6px' }}>Clear</button>
         </div>
-      </div>
 
-      <div style={{ background: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', marginBottom: '30px', display: 'flex', gap: '20px', alignItems: 'center' }}>
-        <h3 style={{ margin: 0, color: '#1f2937' }}>Find Appointments</h3>
-        <input type="text" placeholder="Search by patient name..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} style={{ padding: '10px', flex: 1 }} />
-        <input type="date" value={dateFilter} onChange={e => setDateFilter(e.target.value)} style={{ padding: '10px' }} />
-        <button onClick={() => { setSearchTerm(''); setDateFilter(''); }} style={{ padding: '10px', background: '#d1d5db', border: 'none', borderRadius: '6px' }}>Clear</button>
-      </div>
-
-      <h2 style={{ color: '#1f2937', borderBottom: '1px solid #e5e7eb', paddingBottom: '10px', marginTop: '30px' }}>Appointments for {selectedDoctor}</h2>
+        <h2 style={{ color: '#1f2937', borderBottom: '1px solid #e5e7eb', paddingBottom: '10px', marginTop: '30px' }}>Appointments for {selectedDoctor}</h2>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '20px' }}>
         {filteredAppointments.map(apt => (
           <div key={apt.id} style={{ background: completedAppointments.has(apt.id) ? '#e5e7eb' : 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', opacity: completedAppointments.has(apt.id) ? 0.6 : 1 }}>
@@ -480,6 +561,16 @@ export default function DoctorView() {
             <button onClick={() => setPatientFileOpen(false)} style={{ marginTop: '20px', padding: '10px 20px', background: '#d1d5db', border: 'none', borderRadius: '6px', flexShrink: 0 }}>Close</button>
           </div>
         </div>
+      )}
+          </div>
+        </main>
+      ) : (
+        <DoctorLogin 
+          onLogin={(doctor) => {
+            setIsAuthenticated(true);
+            setSelectedDoctor(doctor.name);
+          }}
+        />
       )}
     </div>
   );
