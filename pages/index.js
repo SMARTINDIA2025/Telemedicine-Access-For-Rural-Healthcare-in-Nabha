@@ -129,6 +129,12 @@ export default function Home() {
               {t("doctorLogin")}
             </a>
           </Link>
+          <Link href="/login-pharmacy-admin" legacyBehavior>
+            <a className="inline-flex items-center px-4 py-2 rounded-lg text-pink-700 hover:bg-pink-50 transition-colors">
+              <HiOutlineBeaker className="w-5 h-5 mr-2" />
+              {t("pharmacyAdminLogin")}
+            </a>
+          </Link>
           <Link href="/super-admin" legacyBehavior>
             <a className="inline-flex items-center px-4 py-2 rounded-lg text-green-700 hover:bg-green-50 transition-colors">
               <HiOutlineShieldCheck className="w-5 h-5 mr-2" />
